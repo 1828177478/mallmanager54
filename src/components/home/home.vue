@@ -8,7 +8,7 @@
                     <el-col :span="19" class="middle-log"><div class="grid-content bg-purple-light">
                         <h2>电商后台管理系统</h2></div></el-col>
                     <el-col :span="1"><div class="grid-content bg-purple">
-                         <a href="#" class="loginout" @click = 'loginout()'>退出</a></div></el-col>
+                         <a href="#" class="loginout" @click.prevent = 'loginout()'>退出</a></div></el-col>
                 </el-row>
             </el-header>
             <el-container>
@@ -16,7 +16,8 @@
                 <el-aside width="200px" class="aside">
                     <el-row class="tac">
                     <el-menu
-                    unique-opened='true'
+                    :router = 'true'
+                   :unique-opened='true'
                     default-active="2"
                     class="el-menu-vertical-demo">
                     <el-submenu index="1">
@@ -25,7 +26,7 @@
                             <span>用户管理</span>
                         </template>
                         <el-menu-item-group>
-                            <el-menu-item index="1-1">用户列表</el-menu-item>
+                            <el-menu-item index="users">用户列表</el-menu-item>
                         </el-menu-item-group>
                     </el-submenu>
                     <el-submenu index="2">
@@ -34,9 +35,9 @@
                             <span>权限管理</span>
                         </template>
                         <el-menu-item-group>
-                           
+
                             <el-menu-item index="1-1">角色列表</el-menu-item>
-                           
+
                             <el-menu-item index="1-2">权限列表</el-menu-item>
                         </el-menu-item-group>
                     </el-submenu>
@@ -69,13 +70,13 @@
                             <el-menu-item index="1-1">数据报表</el-menu-item>
                         </el-menu-item-group>
                     </el-submenu>
-                    
+
                     </el-menu>
                 </el-row>
                 </el-aside>
                 <!-- //主体部分 -->
                 <el-main class="min">
-                   
+                    <router-view></router-view>
                 </el-main>
             </el-container>
         </el-container>
@@ -84,24 +85,27 @@
 
 <script>
 export default {
-    //验证用户是否登录
-    beforeCreate(){
-        // 获取token值
-        const token = localStorage.getItem('token')
-        // 如果token值不存在，证明用户未登录，跳回登录页面
-        if(!token) {
-            this.$router.push({name:'login'})
-        }
-    },
-    loginout(){
-        // 提示
-        this.$message.success('退出成功')
-        // 清除
-        localStorage.clear()
-        //回到login组件
-        this.$router.push({name:'login'})
+  beforeCreate () {
+    // 获取token值
+    const token = localStorage.getItem('token')
+    // 如果token值不存在，证明用户未登录，跳回登录页面
+    if (!token) {
+      this.$router.push({ name: 'login' })
     }
-};
+  },
+  methods: {
+    // 验证用户是否登录
+
+    loginout () {
+      // 提示
+      this.$message.success('退出成功')
+      // 清除
+      localStorage.clear()
+      // 回到login组件
+      this.$router.push({ name: 'login' })
+    }
+  }
+}
 </script>
 
 <style>
