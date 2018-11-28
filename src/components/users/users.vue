@@ -120,206 +120,201 @@
 
 <script>
 export default {
-    data() {
-        return {
-            query: '',
-            userList: [{
-                create_time: '',
-                email: '',
-                id: '',
-                mg_state: '',
-                mobile: '',
-                role_name: '',
-                username: ''
-            }],
-            //   获取用户列表的数据
-            pagenum: 1,
-            pagesize: 2,
-            total: -1,
-            //添加弹出层数据
-            dialogFormVisibleAdd: false,
-            //编辑弹出层数据
-            dialogFormVisibleEdit: false,
-            //对号按钮
-            dialogFormVisiblePlay:false,
+  data () {
+    return {
+      query: '',
+      userList: [{
+        create_time: '',
+        email: '',
+        id: '',
+        mg_state: '',
+        mobile: '',
+        role_name: '',
+        username: ''
+      }],
+      //   获取用户列表的数据
+      pagenum: 1,
+      pagesize: 2,
+      total: -1,
+      // 添加弹出层数据
+      dialogFormVisibleAdd: false,
+      // 编辑弹出层数据
+      dialogFormVisibleEdit: false,
+      // 对号按钮
+      dialogFormVisiblePlay: false,
 
-            form: {
-                username: '',
-                password: '',
-                email: '',
-                mobile: ''
+      form: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
 
-            },
-            //当点击对号按钮时弹出框所需数据
-            currentUser:'',
-            modelid:-1,
-            clos:[],
-            currentUserId:""
+      },
+      // 当点击对号按钮时弹出框所需数据
+      currentUser: '',
+      modelid: -1,
+      clos: [],
+      currentUserId: ''
 
-        }
-
-    },
-    created() {
-        this.getUserList()
-    },
-    methods: {
-        //当点击对号按钮时，弹出对话框
-         async userplay(user){
-             this.currentUserId = user.id
-            //获取所有角色
-            this.currentUser = user.username
-            const res = await this.$http.get(`roles`)
-            this.clos = res.data.data
-            console.log(res)
-            //获取角色的id
-            const res2 = await this.$http.get(`users/${user.id}`)
-            console.log(res2)
-            this.modelid = res2.data.data.rid
-            this.dialogFormVisiblePlay = true
-        },
-        //点击确认按钮时，修改用户的角色
-        fixrols(){
-            this.$http.put(`users/${this.currentUserId}/role`,{
-                rid:this.modelid
-            })
-            //关闭弹出框
-              this.dialogFormVisiblePlay=false
-        },
-        //改变用户状态
-        changestatus(row) {
-            this.$http.put(`users/${row.id}/state/${row.mg_state}`)
-            // console.log(row)
-        },
-        //编辑
-        edituser(Editdata) {
-            this.dialogFormVisibleEdit = true,
-                this.form = Editdata
-        },
-        //编辑弹出层确定按钮
-        sureEdit() {
-
-            this.$http.put(`users/${this.form.id}`, this.form)
-            //提示信息
-            //关闭弹出层
-            this.dialogFormVisibleEdit = false
-            //刷新页面
-            this.getUserList()
-        },
-        //删除当前点击的用户
-        userdelete(ID) {
-            this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(async () => {
-                //发送请求，删除数据
-                const res = await this.$http.delete(`users/${ID}`)
-                // console.log(res);
-                const {
-                    meta: {
-                        msg,
-                        status
-                    },
-                    data
-                } = res.data
-
-                //更新用户列表
-                this.pagenum = 1
-                this.getUserList()
-
-                //弹出提示信息
-                // this.$message.success(msg)
-                this.$message({
-                    type: 'success',
-                    message: '删除成功!'
-                });
-
-            }).catch(() => {
-                this.$message({
-                    type: 'info',
-                    message: '已取消删除'
-                });
-            });
-
-        },
-        //添加确定，发送请求
-        async adduser() {
-
-            const res = await this.$http.post('users', this.form)
-            // console.log(res)
-            const {
-                meta: {
-                    status,
-                    msg
-                },
-                data
-            } = res.data
-            if (status === 201) {
-                //关闭弹出层
-                this.form = {}
-                this.dialogFormVisibleAdd = false
-                //添加提示框
-                this.$message.success(msg)
-                //更新列表
-                this.getUserList()
-            } else {
-                this.$message.warning(msg)
-            }
-        },
-        //弹出层添加按钮
-        showUserAdd() {
-            this.dialogFormVisibleAdd = true
-            //当点击编辑按钮，将数据显示到编辑弹出框时，添加弹出框此时应为空
-            this.form = {}
-        },
-        //搜索框删除按钮
-        resetusers() {
-            this.getUserList()
-        },
-        //搜索框
-        searchUser() {
-            this.pagenum = 1
-            this.getUserList()
-        },
-        // 分页方法
-        handleSizeChange(val) {
-            // console.log(`每页 ${val} 条`)
-            this.pagesize = val
-            //   this.pagenum = 1
-            this.getUserList()
-        },
-        handleCurrentChange(val) {
-            // console.log(`当前页: ${val}`)
-            this.pagenum = val
-            this.getUserList()
-        },
-
-        async getUserList() {
-            // 设置请求头
-            const AUTH_TOKEN = localStorage.getItem('token')
-            this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-
-            const res = await this.$http.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
-            console.log(res)
-            const {
-                meta: {
-                    msg,
-                    status
-                },
-                data: {
-                    total,
-                    users
-                }
-            } = res.data
-            if (status === 200) {
-                this.total = total
-                this.userList = users
-                this.$message.success(msg)
-            } else {
-                this.$message.warning(msg)
-            }
-        }
     }
+  },
+  created () {
+    this.getUserList()
+  },
+  methods: {
+    // 当点击对号按钮时，弹出对话框
+    async userplay (user) {
+      this.currentUserId = user.id
+      // 获取所有角色
+      this.currentUser = user.username
+      const res = await this.$http.get(`roles`)
+      this.clos = res.data.data
+      console.log(res)
+      // 获取角色的id
+      const res2 = await this.$http.get(`users/${user.id}`)
+      console.log(res2)
+      this.modelid = res2.data.data.rid
+      this.dialogFormVisiblePlay = true
+    },
+    // 点击确认按钮时，修改用户的角色
+    fixrols () {
+      this.$http.put(`users/${this.currentUserId}/role`, {
+        rid: this.modelid
+      })
+      // 关闭弹出框
+      this.dialogFormVisiblePlay = false
+    },
+    // 改变用户状态
+    changestatus (row) {
+      this.$http.put(`users/${row.id}/state/${row.mg_state}`)
+      // console.log(row)
+    },
+    // 编辑
+    edituser (Editdata) {
+      this.dialogFormVisibleEdit = true,
+      this.form = Editdata
+    },
+    // 编辑弹出层确定按钮
+    sureEdit () {
+      this.$http.put(`users/${this.form.id}`, this.form)
+      // 提示信息
+      // 关闭弹出层
+      this.dialogFormVisibleEdit = false
+      // 刷新页面
+      this.getUserList()
+    },
+    // 删除当前点击的用户
+    userdelete (ID) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        // 发送请求，删除数据
+        const res = await this.$http.delete(`users/${ID}`)
+        // console.log(res);
+        const {
+          meta: {
+            msg,
+            status
+          },
+          data
+        } = res.data
+
+        // 更新用户列表
+        this.pagenum = 1
+        this.getUserList()
+
+        // 弹出提示信息
+        // this.$message.success(msg)
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    // 添加确定，发送请求
+    async adduser () {
+      const res = await this.$http.post('users', this.form)
+      // console.log(res)
+      const {
+        meta: {
+          status,
+          msg
+        },
+        data
+      } = res.data
+      if (status === 201) {
+        // 关闭弹出层
+        this.form = {}
+        this.dialogFormVisibleAdd = false
+        // 添加提示框
+        this.$message.success(msg)
+        // 更新列表
+        this.getUserList()
+      } else {
+        this.$message.warning(msg)
+      }
+    },
+    // 弹出层添加按钮
+    showUserAdd () {
+      this.dialogFormVisibleAdd = true
+      // 当点击编辑按钮，将数据显示到编辑弹出框时，添加弹出框此时应为空
+      this.form = {}
+    },
+    // 搜索框删除按钮
+    resetusers () {
+      this.getUserList()
+    },
+    // 搜索框
+    searchUser () {
+      this.pagenum = 1
+      this.getUserList()
+    },
+    // 分页方法
+    handleSizeChange (val) {
+      // console.log(`每页 ${val} 条`)
+      this.pagesize = val
+      //   this.pagenum = 1
+      this.getUserList()
+    },
+    handleCurrentChange (val) {
+      // console.log(`当前页: ${val}`)
+      this.pagenum = val
+      this.getUserList()
+    },
+
+    async getUserList () {
+      // 设置请求头
+      const AUTH_TOKEN = localStorage.getItem('token')
+      this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
+
+      const res = await this.$http.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
+      console.log(res)
+      const {
+        meta: {
+          msg,
+          status
+        },
+        data: {
+          total,
+          users
+        }
+      } = res.data
+      if (status === 200) {
+        this.total = total
+        this.userList = users
+        this.$message.success(msg)
+      } else {
+        this.$message.warning(msg)
+      }
+    }
+  }
 }
 </script>
 
