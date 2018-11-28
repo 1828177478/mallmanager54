@@ -35,16 +35,16 @@
             </el-table-column>
             <el-table-column label="用户状态">
                 <template slot-scope="scope">
-                    <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949">
+                    <el-switch @change="changestatus(scope.row)" v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949">
                     </el-switch>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-row>
-                        <el-button @click="edituser()" size="mini" plain type="primary" icon="el-icon-edit" circle></el-button>
+                        <el-button @click="edituser(scope.row)" size="mini" plain type="primary" icon="el-icon-edit" circle></el-button>
                         <el-button @click="userdelete(scope.row.id)" size="mini" plain type="danger" icon="el-icon-delete" circle></el-button>
-                        <el-button  size="mini" plain type="success" icon="el-icon-check" circle></el-button>
+                        <el-button @click="userplay(scope.row)" size="mini" plain type="success" icon="el-icon-check" circle></el-button>
                     </el-row>
 
                 </template>
@@ -57,7 +57,7 @@
     </el-pagination>
 
     <!--// 点击添加按钮时，弹出添加框 -->
-    <el-dialog title="收货地址" :visible.sync="dialogFormVisibleAdd">
+    <el-dialog title="添加" :visible.sync="dialogFormVisibleAdd">
         <el-form :model="form">
             <el-form-item label="用户名" label-width="100px">
                 <el-input v-model="form.username" autocomplete="off"></el-input>
@@ -78,11 +78,11 @@
             <el-button type="primary" @click="adduser()">确 定</el-button>
         </div>
     </el-dialog>
-         <!--// 点击编辑按钮时，弹出编辑框 -->
+    <!--// 点击编辑按钮时，弹出编辑框 -->
     <el-dialog title="编辑" :visible.sync="dialogFormVisibleEdit">
         <el-form :model="form">
             <el-form-item label="用户名" label-width="100px">
-                <el-input v-model="form.username" autocomplete="off"></el-input>
+                <el-input disabled v-model="form.username" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="邮箱" label-width="100px">
                 <el-input v-model="form.email" autocomplete="off"></el-input>
@@ -94,9 +94,27 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
-            <el-button type="primary">确 定</el-button>
+            <el-button type="primary" @click='sureEdit()'>确 定</el-button>
         </div>
     </el-dialog>
+    <!--// 点击对号按钮时，弹出对话框 -->
+    <el-dialog title="收货地址" :visible.sync="dialogFormVisiblePlay">
+  <el-form :model="form">
+    <el-form-item label="活动名称" label-width="100px">
+     {{currentUser}}
+    </el-form-item>
+    <el-form-item label="活动区域" label-width="100px">
+      <el-select v-model="modelid">
+        <el-option label="请选择" :value="-1"></el-option>
+        <el-option v-for = "(item,i) in clos" :label = "item.roleName" :value = "item.id" :key="i"></el-option>
+      </el-select>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisiblePlay = false">取 消</el-button>
+    <el-button type="primary" @click="fixrols()">确 定</el-button>
+  </div>
+</el-dialog>
 </el-card>
 </template>
 
@@ -121,14 +139,22 @@ export default {
             //添加弹出层数据
             dialogFormVisibleAdd: false,
             //编辑弹出层数据
-            dialogFormVisibleEdit:false,
+            dialogFormVisibleEdit: false,
+            //对号按钮
+            dialogFormVisiblePlay:false,
+
             form: {
                 username: '',
                 password: '',
                 email: '',
                 mobile: ''
 
-            }
+            },
+            //当点击对号按钮时弹出框所需数据
+            currentUser:'',
+            modelid:-1,
+            clos:[],
+            currentUserId:""
 
         }
 
@@ -137,9 +163,47 @@ export default {
         this.getUserList()
     },
     methods: {
+        //当点击对号按钮时，弹出对话框
+         async userplay(user){
+             this.currentUserId = user.id
+            //获取所有角色
+            this.currentUser = user.username
+            const res = await this.$http.get(`roles`)
+            this.clos = res.data.data
+            console.log(res)
+            //获取角色的id
+            const res2 = await this.$http.get(`users/${user.id}`)
+            console.log(res2)
+            this.modelid = res2.data.data.rid
+            this.dialogFormVisiblePlay = true
+        },
+        //点击确认按钮时，修改用户的角色
+        fixrols(){
+            this.$http.put(`users/${this.currentUserId}/role`,{
+                rid:this.modelid
+            })
+            //关闭弹出框
+              this.dialogFormVisiblePlay=false
+        },
+        //改变用户状态
+        changestatus(row) {
+            this.$http.put(`users/${row.id}/state/${row.mg_state}`)
+            // console.log(row)
+        },
         //编辑
-        edituser(){
-            this.dialogFormVisibleEdit=true
+        edituser(Editdata) {
+            this.dialogFormVisibleEdit = true,
+                this.form = Editdata
+        },
+        //编辑弹出层确定按钮
+        sureEdit() {
+
+            this.$http.put(`users/${this.form.id}`, this.form)
+            //提示信息
+            //关闭弹出层
+            this.dialogFormVisibleEdit = false
+            //刷新页面
+            this.getUserList()
         },
         //删除当前点击的用户
         userdelete(ID) {
@@ -150,7 +214,7 @@ export default {
             }).then(async () => {
                 //发送请求，删除数据
                 const res = await this.$http.delete(`users/${ID}`)
-                console.log(res);
+                // console.log(res);
                 const {
                     meta: {
                         msg,
@@ -159,7 +223,7 @@ export default {
                     data
                 } = res.data
 
-                  //更新用户列表
+                //更新用户列表
                 this.pagenum = 1
                 this.getUserList()
 
@@ -169,7 +233,6 @@ export default {
                     type: 'success',
                     message: '删除成功!'
                 });
-              
 
             }).catch(() => {
                 this.$message({
@@ -177,10 +240,11 @@ export default {
                     message: '已取消删除'
                 });
             });
-            
+
         },
         //添加确定，发送请求
         async adduser() {
+
             const res = await this.$http.post('users', this.form)
             // console.log(res)
             const {
@@ -205,6 +269,8 @@ export default {
         //弹出层添加按钮
         showUserAdd() {
             this.dialogFormVisibleAdd = true
+            //当点击编辑按钮，将数据显示到编辑弹出框时，添加弹出框此时应为空
+            this.form = {}
         },
         //搜索框删除按钮
         resetusers() {
@@ -217,13 +283,13 @@ export default {
         },
         // 分页方法
         handleSizeChange(val) {
-            console.log(`每页 ${val} 条`)
+            // console.log(`每页 ${val} 条`)
             this.pagesize = val
             //   this.pagenum = 1
             this.getUserList()
         },
         handleCurrentChange(val) {
-            console.log(`当前页: ${val}`)
+            // console.log(`当前页: ${val}`)
             this.pagenum = val
             this.getUserList()
         },
