@@ -23,22 +23,25 @@
             <el-aside width="200px" class="aside">
                 <el-row class="tac">
                     <el-menu :router='true' :unique-opened='true' default-active="2" class="el-menu-vertical-demo">
-                        <el-submenu index="1">
+                        <el-submenu :index="''+item1.order" v-for="(item1,i) in menu" :key="i">
                             <template slot="title">
                                 <i class="el-icon-location"></i>
-                                <span>用户管理</span>
+                                <span>{{item1.authName}}</span>
                             </template>
-                            <el-menu-item-group>
-                                <el-menu-item index="users">用户列表</el-menu-item>
-                            </el-menu-item-group>
+                            <template >
+                                <el-menu-item-group v-for="(items2,i) in item1.children" :key="i">
+                                    <el-menu-item :index = "''+items2.path">{{items2.authName}}</el-menu-item>
+                                </el-menu-item-group>
+                            </template>
+
                         </el-submenu>
-                        <el-submenu index="2">
+                        <!-- <el-submenu index="2">
                             <template slot="title">
                                 <i class="el-icon-location"></i>
                                 <span>权限管理</span>
                             </template>
                             <el-menu-item-group>
-                                <el-menu-item index="1-1">角色列表</el-menu-item>
+                                <el-menu-item index="role">角色列表</el-menu-item>
                                 <el-menu-item index="rights">权限列表</el-menu-item>
                             </el-menu-item-group>
                         </el-submenu>
@@ -70,7 +73,7 @@
                             <el-menu-item-group>
                                 <el-menu-item index="1-1">数据报表</el-menu-item>
                             </el-menu-item-group>
-                        </el-submenu>
+                        </el-submenu> -->
 
                     </el-menu>
                 </el-row>
@@ -86,30 +89,45 @@
 
 <script>
 export default {
-  beforeCreate () {
-    // 获取token值
-    const token = localStorage.getItem('token')
-    // 如果token值不存在，证明用户未登录，跳回登录页面
-    if (!token) {
-      this.$router.push({
-        name: 'login'
-      })
-    }
-  },
-  methods: {
-    // 验证用户是否登录
+    data() {
+        return {
+            menu: []
+        }
+    },
+    beforeCreate() {
+        // // 获取token值
+        // const token = localStorage.getItem('token')
+        // // 如果token值不存在，证明用户未登录，跳回登录页面
+        // if (!token) {
+        //     this.$router.push({
+        //         name: 'login'
+        //     })
+        // }
+    },
+    created() {
+        this.getMenus()
+    },
+    methods: {
+        //获取侧边栏的数据
+        async getMenus() {
+            const res = await this.$http.get(`menus`)
+            console.log(res)
+            this.menu = res.data.data
+        },
 
-    loginout () {
-      // 提示
-      this.$message.success('退出成功')
-      // 清除
-      localStorage.clear()
-      // 回到login组件
-      this.$router.push({
-        name: 'login'
-      })
+        // 验证用户是否登录
+
+        loginout() {
+            // 提示
+            this.$message.success('退出成功')
+            // 清除
+            localStorage.clear()
+            // 回到login组件
+            this.$router.push({
+                name: 'login'
+            })
+        }
     }
-  }
 }
 </script>
 

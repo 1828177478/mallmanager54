@@ -53,7 +53,7 @@
     </template>
 
     <!-- 分页 -->
-    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pagenum" :page-sizes="[2, 4, 6, 8]" :page-size="2" layout="total, sizes, prev, pager, next, jumper" :total="total">
+    <el-pagination class="fenye" @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pagenum" :page-sizes="[2, 4, 6, 8]" :page-size="2" layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
 
     <!--// 点击添加按钮时，弹出添加框 -->
@@ -321,6 +321,9 @@ export default {
 <style>
 .box-card {
     height: 100%;
+}
+.fenye {
+  margin-top: 20px;
 }
 
 .input-with-select {
