@@ -9,6 +9,7 @@ import Goods from '@/components/goods/goods.vue'
 import GoodsAdd from '@/components/goods/goodsAdd.vue'
 import cateparams from '@/components/goods/cateparams.vue'
 import Goodscate from '@/components/goods/goodscate.vue'
+import Order from '@/components/order/order.vue'
 import {Message} from 'element-ui'
 Vue.use(Router)
 
@@ -53,6 +54,10 @@ const router  =  new Router({
         name: 'categories',
         path: '/categories',
         component: Goodscate
+      }, {
+        name: 'orders',
+        path: '/orders',
+        component: Order
       },]
     }
   ]
